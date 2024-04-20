@@ -1,8 +1,9 @@
-from django.urls import path
-
-from .views import image_upload, product_upload
+from django.contrib import admin
+from django.urls import include, path
 
 urlpatterns = [
-    path("img/", image_upload, name="image_upload"),
-    path("product/", product_upload, name="product_upload"),
+    path("admin/", admin.site.urls),
+    path("", include("myapp.urls")),
+    path("", include("myapp1.urls")),
+    path("", include("myapp2.urls")),
 ]
