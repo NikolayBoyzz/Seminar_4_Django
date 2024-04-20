@@ -1,30 +1,41 @@
-from datetime import date, timedelta
+from django.core.files.storage import FileSystemStorage
+from django.shortcuts import render
 
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
-from django.views import View
+from myapp1.models import Product
 
-from myapp1 import models
+from .forms import ImageUploadForm, ProductForm
 
 
-class IndicationPrice(View):
-    def get(self, request, user_id, timespan_in_days) -> HttpResponse:
-        client = get_object_or_404(models.Client, pk=user_id)
-        timespan = timedelta(days=timespan_in_days)
-        indication_price = models.Indication_price.objects.filter(customer=client).filter(
-            date_ordered__gte=(date.today() - timespan)
-        )
+def image_upload(request):
+    if request.method == "POST":
+        form = ImageUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            image = form.cleaned_data["image"]
+            fs = FileSystemStorage()
+            fs.save(image.name, image)
+    else:
+        form = ImageUploadForm()
+    return render(request, "myapp3/image_upload.html", {"form": form})
 
-        o = []
-        for indication_price in indication_price:
-            products = indication_price.products.all()
-            o.append({"order_data": indication_price, "products": products})
 
-        context = {
-            "client": client,
-            "orders": o,
-            "period": timespan_in_days,
-        }
-        return render(
-            request=request, template_name="myapp2/indication_price.html", context=context
-        )
+def product_upload(request):
+    if request.method == "POST":
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            title = form.cleaned_data["title"]
+            description = form.cleaned_data["description"]
+            price = form.cleaned_data["price"]
+            qnt = form.cleaned_data["qnt"]
+            image = form.cleaned_data["image"]
+            product = Product(
+                title=title,
+                description=description,
+                price=price,
+                qnt=qnt,
+                image=image,
+            )
+            product.save()
+
+    else:
+        form = ProductForm()
+    return render(request, "myapp3/product_upload.html", {"form": form})
